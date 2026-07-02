@@ -361,13 +361,45 @@ def show_history():
         
         # Detail header
         st.markdown("---")
-        status_emoji = "🟢" if selected_meeting["status"] == "Completed" else "🟡" if selected_meeting["status"] == "Processing" else "🔴"
-        st.header(f"{status_emoji} {selected_meeting['title']}")
-        st.write(f"**Date:** {selected_meeting['date'][:10]} | **Status:** {selected_meeting['status']}")
         
+        # Meeting title and status layout
+        status_emoji = "🟢" if selected_meeting["status"] == "Completed" else "🟡" if selected_meeting["status"] == "Processing" else "🔴"
+        
+        col_header, col_delete = st.columns([4, 1])
+        with col_header:
+            st.header(f"{status_emoji} {selected_meeting['title']}")
+            st.write(f"**Date:** {selected_meeting['date'][:10]} | **Status:** {selected_meeting['status']}")
+        
+        with col_delete:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🗑️ Delete", key=f"del_{m_id}"):
+                st.session_state.confirm_delete = m_id
+                
+        # Handle deletion confirmation
+        if st.session_state.get("confirm_delete") == m_id:
+            st.warning("⚠️ Are you sure you want to permanently delete this meeting and all its extracted intelligence?")
+            col_yes, col_no = st.columns(2)
+            with col_yes:
+                if st.button("Yes, Delete", key=f"confirm_yes_{m_id}"):
+                    try:
+                        res = requests.delete(f"{BACKEND_URL}/api/meetings/{m_id}", headers=get_headers())
+                        if res.status_code in (200, 204):
+                            st.success("Meeting deleted successfully!")
+                            st.session_state.confirm_delete = None
+                            st.rerun()
+                        else:
+                            st.error(res.json().get("detail", "Failed to delete meeting."))
+                    except Exception as e:
+                        st.error(f"Error connecting to backend: {e}")
+            with col_no:
+                if st.button("Cancel", key=f"confirm_no_{m_id}"):
+                    st.session_state.confirm_delete = None
+                    st.rerun()
+                    
+        # State-based early returns (after delete check)
         if selected_meeting["status"] == "Processing":
             st.warning("This meeting is currently being processed by the Whisper and Google ADK Agent pipeline. Refresh in a few seconds.")
-            if st.button("Refresh Page"):
+            if st.button("Refresh Page", key=f"refresh_{m_id}"):
                 st.rerun()
             return
         elif selected_meeting["status"] == "Failed":

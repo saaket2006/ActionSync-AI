@@ -30,6 +30,7 @@ class ActionSyncOrchestrator(BaseNode):
     name: str = "ActionSyncOrchestrator"
     description: str = "ActionSync AI Multi-Agent Coordinator Node"
     output_schema: Any = PipelineOutput
+    rerun_on_resume: bool = True
 
     async def _run_impl(self, *, ctx: Context, node_input: Any) -> AsyncGenerator[Any, None]:
         """Orchestrates the multi-agent coordination pipeline.
@@ -42,7 +43,7 @@ class ActionSyncOrchestrator(BaseNode):
         
         if not isinstance(node_input, str):
             # Extract text if passed as a complex object/Content
-            from google.adk.utils.context_utils import extract_text_from_content
+            from google.adk.utils.content_utils import extract_text_from_content
             node_input = extract_text_from_content(node_input)
 
         # 1. Parallel Execution Phase (Summarizer, Decision, Action Item, Timeline, Risk)

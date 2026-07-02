@@ -1,7 +1,3 @@
-import os
-# Force a separate test database URL before importing app/engine to isolate testing from development data
-os.environ["DATABASE_URL"] = "sqlite:///./storage/actionsync_test.db"
-
 import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
