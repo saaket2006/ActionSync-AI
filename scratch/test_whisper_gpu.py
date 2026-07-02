@@ -50,13 +50,14 @@ def test_whisper_gpu(audio_path, model_name="base"):
     # 4. Load Whisper Model
     print("\n--- 2. Loading Whisper Model ---")
     try:
-        import whisper
+        from faster_whisper import WhisperModel
         start_load = time.time()
-        model = whisper.load_model(model_name, device=device)
+        compute_type = "float16" if device == "cuda" else "int8"
+        model = WhisperModel(model_name, device=device, compute_type=compute_type)
         load_duration = time.time() - start_load
         print(f"Model loaded successfully in {load_duration:.2f} seconds.")
     except ImportError:
-        print("Error: openai-whisper package not installed. Run 'pip install -r requirements.txt'")
+        print("Error: faster-whisper package not installed. Run 'pip install -r requirements.txt'")
         sys.exit(1)
     except Exception as e:
         print(f"Error loading model: {e}")
@@ -74,7 +75,9 @@ def test_whisper_gpu(audio_path, model_name="base"):
     print("\n--- 3. Running Transcription (GPU Execution) ---")
     start_transcribe = time.time()
     try:
-        result = model.transcribe(audio_path)
+        segments, info = model.transcribe(audio_path, beam_size=5)
+        raw_segments = list(segments)
+        text = " ".join([seg.text for seg in raw_segments])
         transcribe_duration = time.time() - start_transcribe
         print(f"Transcription completed successfully in {transcribe_duration:.2f} seconds.")
     except Exception as e:
@@ -91,7 +94,6 @@ def test_whisper_gpu(audio_path, model_name="base"):
     
     # 8. Print Output Snippet
     print("\n--- 5. Transcription Result Snippet ---")
-    text = result.get("text", "").strip()
     print(f"Total Characters: {len(text)}")
     print(f"Word Count: {len(text.split())}")
     print("\nSnippet (First 300 characters):")

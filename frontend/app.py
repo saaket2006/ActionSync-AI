@@ -99,10 +99,9 @@ SECURITY_QUESTIONS_1 = [
 ]
 
 SECURITY_QUESTIONS_2 = [
-    "What is your favorite book?",
+    "What is your favorite book/game?",
     "What is your favorite movie?",
     "What was your first car?",
-    "What city did you meet your spouse/partner in?",
 ]
 
 # --- AUTHENTICATION INTERFACE ---
@@ -319,7 +318,7 @@ def show_upload():
                 if upload_res.status_code == 201:
                     meeting = upload_res.json()
                     meeting_id = meeting["id"]
-                    st.success(f"File uploaded successfully! Meeting ID: {meeting_id}")
+                    st.success(f"File uploaded successfully!")
                     
                     # 2. Trigger background processing
                     proc_res = requests.post(
@@ -328,8 +327,12 @@ def show_upload():
                     )
                     
                     if proc_res.status_code == 202:
-                        st.info("AI Agents have started transcribing and extracting meeting intelligence in the background.")
-                        st.info("You can view progress in the 'Meeting History' tab.")
+                        st.success("AI Agents have started transcribing and extracting meeting intelligence in the background. Redirecting...")
+                        st.session_state.selected_meeting_id = meeting_id
+                        st.session_state.page = "Meeting History"
+                        import time
+                        time.sleep(1.5)
+                        st.rerun()
                     else:
                         st.error("Failed to trigger agent analysis pipeline.")
                 else:
@@ -355,8 +358,19 @@ def show_history():
             
         # Select meeting to inspect
         meeting_options = {m["title"]: m for m in meetings}
-        selected_title = st.selectbox("Select a meeting to view details:", list(meeting_options.keys()))
+        meeting_titles = list(meeting_options.keys())
+        
+        default_index = 0
+        target_meeting_id = st.session_state.get("selected_meeting_id")
+        if target_meeting_id:
+            for idx, m in enumerate(meetings):
+                if m["id"] == target_meeting_id:
+                    default_index = idx
+                    break
+                    
+        selected_title = st.selectbox("Select a meeting to view details:", meeting_titles, index=default_index)
         selected_meeting = meeting_options[selected_title]
+        st.session_state.selected_meeting_id = selected_meeting["id"]
         m_id = selected_meeting["id"]
         
         # Detail header
@@ -398,12 +412,24 @@ def show_history():
                     
         # State-based early returns (after delete check)
         if selected_meeting["status"] == "Processing":
-            st.warning("This meeting is currently being processed by the Whisper and Google ADK Agent pipeline. Refresh in a few seconds.")
-            if st.button("Refresh Page", key=f"refresh_{m_id}"):
-                st.rerun()
+            st.warning("This meeting is currently being processed by the Whisper and Google ADK Agent pipeline. Waiting for completion...")
+            try:
+                # Perform a blocking wait call to the backend (long polling)
+                wait_res = requests.get(
+                    f"{BACKEND_URL}/api/meetings/wait/{m_id}",
+                    headers=get_headers(),
+                    timeout=600  # 10 minutes timeout
+                )
+                if wait_res.status_code == 200:
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Lost connection to backend: {e}")
+                if st.button("Refresh Page", key=f"refresh_{m_id}"):
+                    st.rerun()
             return
         elif selected_meeting["status"] == "Failed":
-            st.error("Processing failed for this meeting. Please check server logs.")
+            err_msg = selected_meeting.get("error_message") or "Unknown error. Please check server logs."
+            st.error(f"Processing failed for this meeting: {err_msg}")
             return
 
         # Action Buttons (Downloads)

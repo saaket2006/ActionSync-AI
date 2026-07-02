@@ -1,0 +1,390 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "type": "Meeting",
+      "name": "Finance and Cooperate Meeting",
+      "date": "2026-07-02T15:27:31.486906",
+      "status": "Processing",
+      "id": "32a9f69e-77b6-4bb8-a4db-e44dae676350"
+    },
+    {
+      "type": "Decision",
+      "name": "Confirmation of Minutes (18 February)",
+      "status": "Approved",
+      "id": "0bf5bc55-853f-4aab-9a4a-54330efd5731"
+    },
+    {
+      "type": "Person",
+      "name": "Marcus",
+      "role": null,
+      "id": "fbb8c01e-7d4f-428f-87da-08ebd6e1977a"
+    },
+    {
+      "type": "Decision",
+      "name": "Receive Tourism Sector Update",
+      "status": "Approved",
+      "id": "e92107b5-366d-443a-a916-0679cf18c228"
+    },
+    {
+      "type": "Decision",
+      "name": "Airport Business Update",
+      "status": "Approved",
+      "id": "e7ac37b2-1b2b-4058-96fe-414991186e5c"
+    },
+    {
+      "type": "Person",
+      "name": "Andrew",
+      "role": null,
+      "id": "0490624a-a7f8-4d31-8100-65ad97ed577f"
+    },
+    {
+      "type": "Decision",
+      "name": "LASS Statement of Intent and Report",
+      "status": "Approved",
+      "id": "ba459c94-d620-4dcf-adac-e318a83e3610"
+    },
+    {
+      "type": "Decision",
+      "name": "Financial Report Approval",
+      "status": "Approved",
+      "id": "4aa8d5ae-bf4d-47f4-af2d-944ef5d60c41"
+    },
+    {
+      "type": "Person",
+      "name": "Roger",
+      "role": null,
+      "id": "00238b1e-c685-47f9-a66b-91d8b0ee046b"
+    },
+    {
+      "type": "Decision",
+      "name": "Health and Safety Report",
+      "status": "Approved",
+      "id": "b982f9ce-4747-4eeb-8811-56ad1e9b36f1"
+    },
+    {
+      "type": "Person",
+      "name": "Clear",
+      "role": null,
+      "id": "e346b708-9dbc-44c0-806c-61b8aac1cf00"
+    },
+    {
+      "type": "Decision",
+      "name": "Move to Public Excluded Session",
+      "status": "Approved",
+      "id": "4949bece-1551-46fa-8189-018c29a04eb4"
+    },
+    {
+      "type": "Task",
+      "name": "Remedy Meeting Minutes",
+      "status": "Pending",
+      "deadline": "",
+      "id": "3915f9f9-a991-4e7e-af53-7148a61e669b"
+    },
+    {
+      "type": "Person",
+      "name": "Sam",
+      "role": null,
+      "id": "e5a3adcd-164f-4599-9a4a-5aad2fc045aa"
+    },
+    {
+      "type": "Task",
+      "name": "Revise SOI Financials",
+      "status": "In Progress",
+      "deadline": "2020-05-31",
+      "id": "15a0157d-101f-4967-a8a3-a187e9964e48"
+    },
+    {
+      "type": "Person",
+      "name": "Mark Morgan",
+      "role": null,
+      "id": "8a633e0f-08ed-40c7-9994-c0b5a7961a8c"
+    },
+    {
+      "type": "Task",
+      "name": "Coordinate Green Financing",
+      "status": "In Progress",
+      "deadline": "",
+      "id": "8037d6b6-ff9d-447e-9e02-29b038eef96f"
+    },
+    {
+      "type": "Risk",
+      "name": "Significant uncertainty and po...",
+      "description": "Significant uncertainty and potential long-term impact of COVID-19 on the tourism sector, leading to business closures and unemployment.",
+      "impact": "Critical",
+      "mitigation": "Advocating for extended wage subsidies (20 weeks), implementing hibernation strategies for seasonal operators, and executing a three-tiered response plan (mitigate, restart, reimagine) focusing on domestic and intra-regional travel.",
+      "id": "7cc0ada9-8802-462f-aa4f-217f2344326e"
+    },
+    {
+      "type": "Risk",
+      "name": "Drastic reduction in internati...",
+      "description": "Drastic reduction in international and domestic airline connectivity, severely limiting tourism recovery timelines.",
+      "impact": "High",
+      "mitigation": "Incremental restart strategy for domestic flights; focusing marketing efforts on the drive-market (3-hour radius) for the next 6-12 months while preparing for long-term international recovery (2-5 years).",
+      "id": "b77d6e0f-fc98-4489-b88e-2d429c635ca9"
+    },
+    {
+      "type": "Risk",
+      "name": "Potential breach of financial ...",
+      "description": "Potential breach of financial covenants by member councils due to revenue losses and increased debt loads.",
+      "impact": "Critical",
+      "mitigation": "Ongoing monitoring by LGFA and DIA; leveraging government support (e.g., standby facilities, Reserve Bank bond buybacks) and prioritizing essential infrastructure investments while deferring non-essential spending.",
+      "id": "ebb18945-15d9-45ef-91e3-16891af6f0d6"
+    },
+    {
+      "type": "Risk",
+      "name": "Risk of resource constraints a...",
+      "description": "Risk of resource constraints and staff burnout at the council level, hindering the ability to support regional collaborative projects (LASS).",
+      "impact": "Medium",
+      "mitigation": "Proactive outreach to identify freed-up capacity from other councils and matching specific skill sets to project needs; prioritizing essential work and fostering regional resource sharing.",
+      "id": "88e85e4d-0cde-4778-bd14-ca2dca785ba3"
+    },
+    {
+      "type": "Risk",
+      "name": "Increased health and safety ri...",
+      "description": "Increased health and safety risks to council staff (mental and physical) due to the COVID-19 pandemic and shift to new working environments (e.g., level 3 protocols).",
+      "impact": "High",
+      "mitigation": "Implementing specific health and safety protocols for field staff, utilizing EAP services for mental well-being, and continuous monitoring of staff locations and health status through team leaders.",
+      "id": "df92650f-b251-4997-8610-6d472fc9984a"
+    },
+    {
+      "type": "Project",
+      "name": "Council Meeting",
+      "status": "Active",
+      "id": "0ba330aa-6523-40b6-921a-3a980954e24f"
+    },
+    {
+      "type": "Timeline",
+      "name": "Previous meeting minutes revie...",
+      "date": "2020-02-18T00:00:00",
+      "id": "37a6461e-c9a4-4587-8a85-2840e02f7e88"
+    },
+    {
+      "type": "Project",
+      "name": "Field Days",
+      "status": "Active",
+      "id": "93226e1d-b33e-409b-9cf1-7c37aec678e5"
+    },
+    {
+      "type": "Timeline",
+      "name": "Field Days online virtual exhi...",
+      "date": "2020-06-30T00:00:00",
+      "id": "71de9834-1920-4006-ab55-6b4cb5200540"
+    },
+    {
+      "type": "Project",
+      "name": "Tourism Recovery",
+      "status": "Active",
+      "id": "ef98b7c5-72a9-491c-af62-caf86f68d6ee"
+    },
+    {
+      "type": "Timeline",
+      "name": "Scheduled return of American A...",
+      "date": "2020-10-01T00:00:00",
+      "id": "3586783c-1a0a-4cb5-af7c-345c1bd5abcb"
+    },
+    {
+      "type": "Project",
+      "name": "Events/Tourism",
+      "status": "Active",
+      "id": "6ba8310d-d015-41d3-a872-d16c1d07beb0"
+    },
+    {
+      "type": "Timeline",
+      "name": "ICC Women's Cricket World Cup.",
+      "date": "2021-02-08T00:00:00",
+      "id": "2984847b-1e3f-4540-855f-3c52db89777a"
+    },
+    {
+      "type": "Project",
+      "name": "Tourism",
+      "status": "Active",
+      "id": "8dde0515-535a-4671-8e13-67d27361abf6"
+    },
+    {
+      "type": "Timeline",
+      "name": "Trends 2021 trade show expecte...",
+      "date": "2021-06-01T00:00:00",
+      "id": "a00862fa-ced2-482d-b92a-529530fd0d44"
+    }
+  ],
+  "edges": [
+    {
+      "relation": "DECIDED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "0bf5bc55-853f-4aab-9a4a-54330efd5731"
+    },
+    {
+      "relation": "DECIDED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "e92107b5-366d-443a-a916-0679cf18c228"
+    },
+    {
+      "relation": "DECIDED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "e7ac37b2-1b2b-4058-96fe-414991186e5c"
+    },
+    {
+      "relation": "DECIDED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "ba459c94-d620-4dcf-adac-e318a83e3610"
+    },
+    {
+      "relation": "DECIDED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "4aa8d5ae-bf4d-47f4-af2d-944ef5d60c41"
+    },
+    {
+      "relation": "DECIDED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "b982f9ce-4747-4eeb-8811-56ad1e9b36f1"
+    },
+    {
+      "relation": "DECIDED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "4949bece-1551-46fa-8189-018c29a04eb4"
+    },
+    {
+      "relation": "ASSIGNED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "3915f9f9-a991-4e7e-af53-7148a61e669b"
+    },
+    {
+      "relation": "ASSIGNED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "15a0157d-101f-4967-a8a3-a187e9964e48"
+    },
+    {
+      "relation": "ASSIGNED_IN",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "8037d6b6-ff9d-447e-9e02-29b038eef96f"
+    },
+    {
+      "relation": "RISK_IDENTIFIED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "7cc0ada9-8802-462f-aa4f-217f2344326e"
+    },
+    {
+      "relation": "RISK_IDENTIFIED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "b77d6e0f-fc98-4489-b88e-2d429c635ca9"
+    },
+    {
+      "relation": "RISK_IDENTIFIED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "ebb18945-15d9-45ef-91e3-16891af6f0d6"
+    },
+    {
+      "relation": "RISK_IDENTIFIED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "88e85e4d-0cde-4778-bd14-ca2dca785ba3"
+    },
+    {
+      "relation": "RISK_IDENTIFIED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "df92650f-b251-4997-8610-6d472fc9984a"
+    },
+    {
+      "relation": "EVENT_OCCURRED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "37a6461e-c9a4-4587-8a85-2840e02f7e88"
+    },
+    {
+      "relation": "EVENT_OCCURRED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "71de9834-1920-4006-ab55-6b4cb5200540"
+    },
+    {
+      "relation": "EVENT_OCCURRED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "3586783c-1a0a-4cb5-af7c-345c1bd5abcb"
+    },
+    {
+      "relation": "EVENT_OCCURRED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "2984847b-1e3f-4540-855f-3c52db89777a"
+    },
+    {
+      "relation": "EVENT_OCCURRED",
+      "source": "32a9f69e-77b6-4bb8-a4db-e44dae676350",
+      "target": "a00862fa-ced2-482d-b92a-529530fd0d44"
+    },
+    {
+      "relation": "DECIDED_BY",
+      "source": "0bf5bc55-853f-4aab-9a4a-54330efd5731",
+      "target": "fbb8c01e-7d4f-428f-87da-08ebd6e1977a"
+    },
+    {
+      "relation": "DECIDED_BY",
+      "source": "e92107b5-366d-443a-a916-0679cf18c228",
+      "target": "fbb8c01e-7d4f-428f-87da-08ebd6e1977a"
+    },
+    {
+      "relation": "DECIDED_BY",
+      "source": "e7ac37b2-1b2b-4058-96fe-414991186e5c",
+      "target": "0490624a-a7f8-4d31-8100-65ad97ed577f"
+    },
+    {
+      "relation": "DECIDED_BY",
+      "source": "ba459c94-d620-4dcf-adac-e318a83e3610",
+      "target": "0490624a-a7f8-4d31-8100-65ad97ed577f"
+    },
+    {
+      "relation": "DECIDED_BY",
+      "source": "4aa8d5ae-bf4d-47f4-af2d-944ef5d60c41",
+      "target": "00238b1e-c685-47f9-a66b-91d8b0ee046b"
+    },
+    {
+      "relation": "DECIDED_BY",
+      "source": "b982f9ce-4747-4eeb-8811-56ad1e9b36f1",
+      "target": "e346b708-9dbc-44c0-806c-61b8aac1cf00"
+    },
+    {
+      "relation": "DECIDED_BY",
+      "source": "4949bece-1551-46fa-8189-018c29a04eb4",
+      "target": "00238b1e-c685-47f9-a66b-91d8b0ee046b"
+    },
+    {
+      "relation": "ASSIGNED_TO",
+      "source": "3915f9f9-a991-4e7e-af53-7148a61e669b",
+      "target": "e5a3adcd-164f-4599-9a4a-5aad2fc045aa"
+    },
+    {
+      "relation": "ASSIGNED_TO",
+      "source": "15a0157d-101f-4967-a8a3-a187e9964e48",
+      "target": "8a633e0f-08ed-40c7-9994-c0b5a7961a8c"
+    },
+    {
+      "relation": "ASSIGNED_TO",
+      "source": "8037d6b6-ff9d-447e-9e02-29b038eef96f",
+      "target": "0490624a-a7f8-4d31-8100-65ad97ed577f"
+    },
+    {
+      "relation": "PART_OF_PROJECT",
+      "source": "37a6461e-c9a4-4587-8a85-2840e02f7e88",
+      "target": "0ba330aa-6523-40b6-921a-3a980954e24f"
+    },
+    {
+      "relation": "PART_OF_PROJECT",
+      "source": "71de9834-1920-4006-ab55-6b4cb5200540",
+      "target": "93226e1d-b33e-409b-9cf1-7c37aec678e5"
+    },
+    {
+      "relation": "PART_OF_PROJECT",
+      "source": "3586783c-1a0a-4cb5-af7c-345c1bd5abcb",
+      "target": "ef98b7c5-72a9-491c-af62-caf86f68d6ee"
+    },
+    {
+      "relation": "PART_OF_PROJECT",
+      "source": "2984847b-1e3f-4540-855f-3c52db89777a",
+      "target": "6ba8310d-d015-41d3-a872-d16c1d07beb0"
+    },
+    {
+      "relation": "PART_OF_PROJECT",
+      "source": "a00862fa-ced2-482d-b92a-529530fd0d44",
+      "target": "8dde0515-535a-4671-8e13-67d27361abf6"
+    }
+  ]
+}

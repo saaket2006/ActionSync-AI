@@ -17,18 +17,19 @@ class WhisperTool(BaseActionSyncTool):
     def initialize(self) -> None:
         """Loads the Whisper model into memory, utilizing GPU if available."""
         try:
-            import whisper
+            from faster_whisper import WhisperModel
             import torch
             device = "cuda" if torch.cuda.is_available() else "cpu"
+            compute_type = "float16" if device == "cuda" else "int8"
             logger.info(f"Hardware Check: PyTorch CUDA Available = {torch.cuda.is_available()}")
             if device == "cuda":
                 logger.info(f"Target GPU Name: {torch.cuda.get_device_name(0)}")
-            logger.info(f"Loading Whisper model '{settings.WHISPER_MODEL_NAME}' on device '{device}'...")
-            self.model = whisper.load_model(settings.WHISPER_MODEL_NAME, device=device)
+            logger.info(f"Loading faster-whisper model '{settings.WHISPER_MODEL_NAME}' on device '{device}' with compute_type '{compute_type}'...")
+            self.model = WhisperModel(settings.WHISPER_MODEL_NAME, device=device, compute_type=compute_type)
             self.initialized = True
-            logger.info(f"Whisper model loaded successfully on device: {device}")
+            logger.info(f"faster-whisper model loaded successfully on device: {device}")
         except ImportError:
-            logger.error("openai-whisper package not installed. Running in mock mode.")
+            logger.error("faster-whisper package not installed. Running in mock mode.")
             self.initialized = True  # Proceed in fallback/mock mode
         except Exception as e:
             logger.error(f"Failed to load Whisper model: {e}")
@@ -53,23 +54,32 @@ class WhisperTool(BaseActionSyncTool):
             return self._generate_mock_transcription(audio_path)
 
         try:
-            result = self.model.transcribe(audio_path)
-            segments = []
+            # Run transcription using faster-whisper (beam_size=5 is standard)
+            segments_generator, info = self.model.transcribe(audio_path, beam_size=5)
             
-            for i, seg in enumerate(result.get("segments", [])):
-                segments.append({
-                    "speaker": f"Speaker 1",  # Simple mono-speaker default
-                    "text": seg.get("text", "").strip(),
-                    "start_time": float(seg.get("start", 0.0)),
-                    "end_time": float(seg.get("end", 0.0))
-                })
+            # Realize the generator to perform transcription
+            raw_segments = list(segments_generator)
+            
+            segments = []
+            text_parts = []
+            
+            for seg in raw_segments:
+                cleaned_text = seg.text.strip()
+                if cleaned_text:
+                    text_parts.append(cleaned_text)
+                    segments.append({
+                        "speaker": "Speaker 1",  # Mono speaker default
+                        "text": cleaned_text,
+                        "start_time": float(seg.start),
+                        "end_time": float(seg.end)
+                    })
 
             return {
-                "text": result.get("text", "").strip(),
+                "text": " ".join(text_parts),
                 "segments": segments
             }
         except Exception as e:
-            logger.error(f"Whisper transcription failed: {e}")
+            logger.error(f"faster-whisper transcription failed: {e}")
             raise e
 
     def validate(self, output: Any) -> bool:

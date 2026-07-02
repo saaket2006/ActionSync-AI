@@ -26,6 +26,12 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+# Export loaded settings to environment variables for external libraries (like Google GenAI/ADK SDKs)
+if settings.GEMINI_API_KEY:
+    os.environ["GEMINI_API_KEY"] = settings.GEMINI_API_KEY
+if settings.GEMINI_MODEL:
+    os.environ["GEMINI_MODEL"] = settings.GEMINI_MODEL
+
 # Ensure directories exist on import
 for path in [settings.STORAGE_DIR, settings.UPLOAD_DIR, settings.GENERATED_DOCS_DIR]:
     os.makedirs(path, exist_ok=True)

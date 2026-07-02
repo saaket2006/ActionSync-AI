@@ -89,47 +89,64 @@ async def run_pipeline_task(db_session_factory, meeting_id: str):
             await asyncio.sleep(3.0)  # Simulate processing latency
             pipeline_result = get_mock_pipeline_output()
         else:
-            # Run using Google ADK Orchestrator
-            logger.info("Instantiating ADK runner for orchestrator workflow...")
-            runner = Runner(
-                agent=actionsync_orchestrator,
-                app_name="ActionSyncAI",
-                session_service=session_service
-            )
-            
-            session_id = f"session_{meeting_id}"
-            user_id = "actionsync_operator"
-            new_message = make_content(meeting.transcript_raw)
-            
-            # Create session in InMemorySessionService before running runner
-            try:
-                await session_service.create_session(
-                    app_name="ActionSyncAI",
-                    user_id=user_id,
-                    session_id=session_id
-                )
-                logger.info(f"Successfully created ADK session: {session_id}")
-            except Exception as e:
-                logger.warning(f"Session already exists or could not be created: {e}")
-            
-            events = []
-            logger.info(f"Running ADK workflow for session: {session_id}")
-            
-            async for event in runner.run_async(
-                user_id=user_id,
-                session_id=session_id,
-                new_message=new_message
-            ):
-                events.append(event)
-                
-            # Extract final pipeline output from event stream
+            # Run using Google ADK Orchestrator with up to 3 retries (10s delay between retries)
+            max_retries = 3
+            retry_delay = 10
             pipeline_result = None
-            for event in events:
-                if event.output is not None:
-                    pipeline_result = event.output
+            
+            for attempt in range(1, max_retries + 1):
+                try:
+                    logger.info(f"Instantiating ADK runner for orchestrator workflow (Attempt {attempt}/{max_retries})...")
+                    runner = Runner(
+                        agent=actionsync_orchestrator,
+                        app_name="ActionSyncAI",
+                        session_service=session_service
+                    )
                     
-            if not pipeline_result:
-                raise RuntimeError("Orchestrator did not yield a valid output event.")
+                    session_id = f"session_{meeting_id}"
+                    user_id = "actionsync_operator"
+                    new_message = make_content(meeting.transcript_raw)
+                    
+                    # Create session in InMemorySessionService before running runner
+                    try:
+                        await session_service.create_session(
+                            app_name="ActionSyncAI",
+                            user_id=user_id,
+                            session_id=session_id
+                        )
+                        logger.info(f"Successfully created ADK session: {session_id}")
+                    except Exception as e:
+                        logger.warning(f"Session already exists or could not be created: {e}")
+                    
+                    events = []
+                    logger.info(f"Running ADK workflow for session: {session_id}")
+                    
+                    async for event in runner.run_async(
+                        user_id=user_id,
+                        session_id=session_id,
+                        new_message=new_message
+                    ):
+                        events.append(event)
+                        
+                    # Extract final pipeline output from event stream
+                    for event in events:
+                        if event.output is not None:
+                            pipeline_result = event.output
+                            
+                    if not pipeline_result:
+                        raise RuntimeError("Orchestrator did not yield a valid output event.")
+                    
+                    logger.info(f"ADK workflow finished successfully on Attempt {attempt}.")
+                    break  # Success, exit the retry loop
+                    
+                except Exception as e:
+                    logger.warning(f"ADK workflow attempt {attempt} failed with error: {e}")
+                    if attempt < max_retries:
+                        logger.info(f"Waiting {retry_delay} seconds before retrying...")
+                        await asyncio.sleep(retry_delay)
+                    else:
+                        logger.error(f"All {max_retries} ADK workflow attempts failed.")
+                        raise e
 
         # 3. Save outcomes using KnowledgeGraphBuilder tool
         logger.info("🧱 [BACKGROUND PROCESS] Executing KnowledgeGraphBuilder to save entities and relations...")
@@ -147,7 +164,8 @@ async def run_pipeline_task(db_session_factory, meeting_id: str):
                 status="Completed",
                 executive_summary=pipeline_result["summarizer"]["executive_summary"],
                 community_impact=pipeline_result["community_impact"]["impact_summary"],
-                clarification_notes="\n".join(pipeline_result["clarification"]["questions"]) if pipeline_result["clarification"]["is_clarification_needed"] else None
+                clarification_notes="\n".join(pipeline_result["clarification"]["questions"]) if pipeline_result["clarification"]["is_clarification_needed"] else None,
+                error_message=None
             )
         )
         
@@ -157,7 +175,7 @@ async def run_pipeline_task(db_session_factory, meeting_id: str):
     except Exception as e:
         logger.error(f"Failed background pipeline execution for meeting {meeting_id}: {e}")
         from schemas.schemas import MeetingUpdate
-        MeetingRepository.update_meeting(db, meeting_id, MeetingUpdate(status="Failed"))
+        MeetingRepository.update_meeting(db, meeting_id, MeetingUpdate(status="Failed", error_message=str(e)))
     finally:
         db.close()
 

@@ -40,6 +40,7 @@ class Meeting(Base):
     executive_summary = Column(Text, nullable=True)
     community_impact = Column(Text, nullable=True)
     clarification_notes = Column(Text, nullable=True)
+    error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     

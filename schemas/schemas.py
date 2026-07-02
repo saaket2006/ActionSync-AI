@@ -78,6 +78,7 @@ class MeetingUpdate(BaseModel):
     executive_summary: Optional[str] = None
     community_impact: Optional[str] = None
     clarification_notes: Optional[str] = None
+    error_message: Optional[str] = None
 
 class MeetingResponse(MeetingBase):
     id: str
@@ -88,6 +89,7 @@ class MeetingResponse(MeetingBase):
     executive_summary: Optional[str] = None
     community_impact: Optional[str] = None
     clarification_notes: Optional[str] = None
+    error_message: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

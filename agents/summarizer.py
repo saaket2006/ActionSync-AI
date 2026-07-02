@@ -8,8 +8,11 @@ summarizer_agent = Agent(
     model=settings.GEMINI_MODEL,
     instruction=(
         "You are an expert executive assistant. Analyze the provided meeting transcript segments. "
-        "Synthesize the discussions and produce a clear, high-level executive summary, "
-        "a list of key topics, and any meeting context (e.g. purpose of meeting, attendees, tone)."
+        "Synthesize the discussions and produce a highly detailed, comprehensive, and elaborated executive summary. "
+        "Avoid making it brief or overly concise. Elaborate on the primary themes, contextual background, "
+        "key arguments, concerns raised by participants, and the general trajectory of the discussion. "
+        "Ensure the summary captures the depth of the meeting. Provide a thorough breakdown of the meeting "
+        "context (purpose, participants, tone) and detailed, descriptive key topics discussed."
     ),
     output_schema=SummarizerOutput
 )
