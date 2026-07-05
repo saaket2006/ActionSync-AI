@@ -2,7 +2,7 @@
 
 > **From Conversations to Accountability**
 
-ActionSync AI is an AI-powered, enterprise-grade Meeting Intelligence Platform. It converts raw organizational conversations (meetings, standups, discussions) into structured, validated execution blueprints—decisions, tasks, risks, and timelines—using a multi-agent workflow coordinated by the **Google ADK (Agent Development Kit)** and powered by **Gemini 2.5**.
+ActionSync AI is an AI-powered, enterprise-grade Meeting Intelligence Platform. It converts raw organizational conversations (meetings, standups, discussions) into structured, validated execution blueprints—decisions, tasks, risks, and timelines—using a multi-agent workflow coordinated by the **Google ADK (Agent Development Kit)** and powered by **Gemini 3.1**.
 
 Unlike standard summary chatbots, ActionSync AI acts as an active accountability orchestrator, verifying commitment levels, mapping dependencies, and generating audit-ready PDF/Markdown reports.
 
@@ -38,7 +38,7 @@ ActionSync AI automatically processes meeting audio/video recordings and impleme
 ## 🛠️ Technology Stack
 
 * **Orchestration & Agents:** Google ADK (Agent Development Kit)
-* **AI Model Engine:** Gemini 2.5 Flash / Pro
+* **AI Model Engine:** Gemini 3.1 Flash / Flash-lite
 * **Backend API:** FastAPI (Python 3.11)
 * **Frontend Interface:** Streamlit (Custom Glassmorphism styling)
 * **Speech Transcription:** OpenAI `faster-whisper` (CTranslate2 local GPU/CUDA acceleration)
