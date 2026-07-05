@@ -17,6 +17,9 @@ Modern organizations conduct hundreds of meetings daily, but face a set of unive
 
 ## 💡 The Solution
 ActionSync AI automatically processes meeting audio/video recordings and implements a structured, multi-agent pipeline:
+
+<img src="docs/Workflow.png" alt="Multi-Agent Pipeline Workflow" width="700" style="max-width: 100%; display: block; margin: 15px auto;">
+
 1. **High-Speed Transcription**: Extracts spoken text locally using CUDA float16 accelerated **faster-whisper** (CTranslate2).
 2. **Multi-Agent Decomposition**: Passes transcripts through nine specialized Google ADK agents for parallel analysis (extracting summaries, items, timelines, risks, and cultural impact).
 3. **Structured Validation**: Employs a Validator Agent to ensure extracted action items have explicit owners, dates, and realistic deadlines.
@@ -52,31 +55,7 @@ ActionSync AI automatically processes meeting audio/video recordings and impleme
 
 The diagram below illustrates the flow from raw meeting audio/video uploads to structured organizational knowledge and reports:
 
-```mermaid
-graph TD
-    A[Meeting Audio/Video Upload] -->|Uvicorn Threadpool| B[OpenAI Whisper Tool]
-    B -->|Fast Transcription on CUDA GPU| C[Raw & Clean Transcripts]
-    C -->|Trigger ADK Session| D[Google ADK Orchestrator]
-    
-    subgraph Multi-Agent Processing Pipeline
-        D --> E[Summarizer Agent]
-        D --> F[Decision Agent]
-        D --> G[Action Item Agent]
-        D --> H[Timeline Agent]
-        D --> I[Risk Agent]
-        D --> J[Community Impact Agent]
-        
-        G --> K[Validator Agent]
-        K -->|Verify Owners & Deadlines| L[Validated Task Registry]
-    end
-    
-    E & F & L & H & I & J --> M[Accountability & Clarification Assessment]
-    M --> N[Knowledge Graph Builder Tool]
-    N -->|Update Relations| O[(NetworkX Graph & DB)]
-    O --> P[Streamlit UI Dashboard]
-    O --> Q[Document Generator Tool]
-    Q -->|Export PDF / MD| R[Downloadable Executive Reports]
-```
+<img src="docs/System%20Arc.png" alt="System Architecture" width="700" style="max-width: 100%; display: block; margin: 15px auto;">
 
 ---
 
