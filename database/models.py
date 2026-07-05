@@ -36,6 +36,7 @@ class Meeting(Base):
     transcript_raw = Column(Text, nullable=True)
     transcript_clean = Column(Text, nullable=True)
     audio_path = Column(String(255), nullable=True)
+    target_language = Column(String(10), default="en", nullable=False)
     status = Column(String(50), default="Pending")  # Pending, Processing, Completed, Failed
     executive_summary = Column(Text, nullable=True)
     community_impact = Column(Text, nullable=True)

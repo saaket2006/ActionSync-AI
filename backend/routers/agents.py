@@ -148,6 +148,91 @@ async def run_pipeline_task(db_session_factory, meeting_id: str):
                         logger.error(f"All {max_retries} ADK workflow attempts failed.")
                         raise e
 
+        # Ensure pipeline_result is a dictionary (in case it is returned as a Pydantic model by ADK)
+        if hasattr(pipeline_result, "model_dump"):
+            pipeline_result = pipeline_result.model_dump()
+        elif hasattr(pipeline_result, "dict"):
+            pipeline_result = pipeline_result.dict()
+
+        # Translate outcomes if target language is not English
+        target_lang = getattr(meeting, "target_language", "en")
+        if target_lang and target_lang != "en":
+            logger.info(f"🌐 [BACKGROUND PROCESS] Translating pipeline outcomes to target language: {target_lang}...")
+            try:
+                from utils.translator import translate_text
+                
+                # Translate Summarizer
+                if "summarizer" in pipeline_result and pipeline_result["summarizer"]:
+                    pipeline_result["summarizer"]["executive_summary"] = translate_text(
+                        pipeline_result["summarizer"].get("executive_summary", ""), target_lang
+                    )
+                    pipeline_result["summarizer"]["meeting_context"] = translate_text(
+                        pipeline_result["summarizer"].get("meeting_context", ""), target_lang
+                    )
+                    if "key_topics" in pipeline_result["summarizer"] and pipeline_result["summarizer"]["key_topics"]:
+                        pipeline_result["summarizer"]["key_topics"] = [
+                            translate_text(topic, target_lang) for topic in pipeline_result["summarizer"]["key_topics"]
+                        ]
+                
+                # Translate Decisions
+                if "decision" in pipeline_result and pipeline_result["decision"] and "decisions" in pipeline_result["decision"]:
+                    for dec in pipeline_result["decision"]["decisions"]:
+                        dec["title"] = translate_text(dec.get("title", ""), target_lang)
+                        dec["description"] = translate_text(dec.get("description", ""), target_lang)
+                
+                # Translate Action Items
+                if "action_item" in pipeline_result and pipeline_result["action_item"] and "tasks" in pipeline_result["action_item"]:
+                    for t in pipeline_result["action_item"]["tasks"]:
+                        t["title"] = translate_text(t.get("title", ""), target_lang)
+                        t["description"] = translate_text(t.get("description", ""), target_lang)
+                
+                # Translate Timeline
+                if "timeline" in pipeline_result and pipeline_result["timeline"] and "events" in pipeline_result["timeline"]:
+                    for ev in pipeline_result["timeline"]["events"]:
+                        ev["description"] = translate_text(ev.get("description", ""), target_lang)
+                
+                # Translate Risks
+                if "risk" in pipeline_result and pipeline_result["risk"] and "risks" in pipeline_result["risk"]:
+                    for r in pipeline_result["risk"]["risks"]:
+                        r["description"] = translate_text(r.get("description", ""), target_lang)
+                        r["mitigation_strategy"] = translate_text(r.get("mitigation_strategy", ""), target_lang)
+                
+                # Translate Community Impact
+                if "community_impact" in pipeline_result and pipeline_result["community_impact"]:
+                    pipeline_result["community_impact"]["impact_summary"] = translate_text(
+                        pipeline_result["community_impact"].get("impact_summary", ""), target_lang
+                    )
+                    if "team_dynamics" in pipeline_result["community_impact"] and pipeline_result["community_impact"]["team_dynamics"]:
+                        pipeline_result["community_impact"]["team_dynamics"] = translate_text(
+                            pipeline_result["community_impact"].get("team_dynamics", ""), target_lang
+                        )
+                    if "cultural_alignment" in pipeline_result["community_impact"] and pipeline_result["community_impact"]["cultural_alignment"]:
+                        pipeline_result["community_impact"]["cultural_alignment"] = translate_text(
+                            pipeline_result["community_impact"].get("cultural_alignment", ""), target_lang
+                        )
+                
+                # Translate Accountability
+                if "accountability" in pipeline_result and pipeline_result["accountability"]:
+                    pipeline_result["accountability"]["accountability_summary"] = translate_text(
+                        pipeline_result["accountability"].get("accountability_summary", ""), target_lang
+                    )
+                    pipeline_result["accountability"]["follow_up_schedule"] = translate_text(
+                        pipeline_result["accountability"].get("follow_up_schedule", ""), target_lang
+                    )
+                    if "assignments_confirmed" in pipeline_result["accountability"] and pipeline_result["accountability"]["assignments_confirmed"]:
+                        pipeline_result["accountability"]["assignments_confirmed"] = [
+                            translate_text(assign, target_lang) for assign in pipeline_result["accountability"]["assignments_confirmed"]
+                        ]
+
+                # Translate Clarification questions
+                if "clarification" in pipeline_result and pipeline_result["clarification"]:
+                    if "questions" in pipeline_result["clarification"] and pipeline_result["clarification"]["questions"]:
+                        pipeline_result["clarification"]["questions"] = [
+                            translate_text(q, target_lang) for q in pipeline_result["clarification"]["questions"]
+                        ]
+            except Exception as e:
+                logger.error(f"🌐 [BACKGROUND PROCESS] Failed to translate pipeline results: {e}. Preserving English outputs.")
+
         # 3. Save outcomes using KnowledgeGraphBuilder tool
         logger.info("🧱 [BACKGROUND PROCESS] Executing KnowledgeGraphBuilder to save entities and relations...")
         kg_start = time.time()

@@ -17,11 +17,21 @@ Modern organizations conduct hundreds of meetings daily, but face a set of unive
 
 ## 💡 The Solution
 ActionSync AI automatically processes meeting audio/video recordings and implements a structured, multi-agent pipeline:
-1. **High-Speed Transcription**: Extracts spoken text using hardware-accelerated OpenAI Whisper.
+1. **High-Speed Transcription**: Extracts spoken text locally using CUDA float16 accelerated **faster-whisper** (CTranslate2).
 2. **Multi-Agent Decomposition**: Passes transcripts through nine specialized Google ADK agents for parallel analysis (extracting summaries, items, timelines, risks, and cultural impact).
 3. **Structured Validation**: Employs a Validator Agent to ensure extracted action items have explicit owners, dates, and realistic deadlines.
 4. **Relational Mapping**: Automatically builds an organizational knowledge graph mapping entities, relationships, and dependencies.
 5. **Interactive Dashboard**: Exposes real-time task analytics, risk distributions, and search capabilities.
+
+---
+
+## 🌟 Key Platform Features
+
+* **🚀 2x local Transcription Speedup:** Upgraded from standard whisper to `faster-whisper` running locally on GPU (float16/CUDA) for maximum performance.
+* **🌐 Multilingual Target Output:** Select your desired target language (English, Spanish, French, German, or regional Indian languages like Hindi, Tamil, Telugu, etc.) on upload. Results are translated using **Bhashini** (Indic) and **Gemini** (Global) prior to database insertion.
+* **📄 Dynamic Flowable PDF Reports:** Auto-wrapping paragraph layout engine with smart pagination and running headers, ensuring no meeting outcomes are cut off or omitted.
+* **🗃️ Alembic Database Migrations:** Programmatic DB migrations automatically apply on backend startup. Altering database tables is safe and seamless, preventing user account or meeting record data loss.
+* **🔒 5-Minute Session Preservation:** Keeps users logged in across soft browser refreshes (Ctrl+R) using URL query param syncing, while logging out immediately on hard refreshes.
 
 ---
 
@@ -31,9 +41,9 @@ ActionSync AI automatically processes meeting audio/video recordings and impleme
 * **AI Model Engine:** Gemini 2.5 Flash / Pro
 * **Backend API:** FastAPI (Python 3.11)
 * **Frontend Interface:** Streamlit (Custom Glassmorphism styling)
-* **Speech Transcription:** OpenAI Whisper (CUDA-optimized GPU acceleration)
-* **Translation Service:** Bhashini Translation API (for multilingual inputs)
-* **Database & ORM:** SQLite (Dev) / PostgreSQL (Prod) with SQLAlchemy
+* **Speech Transcription:** OpenAI `faster-whisper` (CTranslate2 local GPU/CUDA acceleration)
+* **Translation Service:** Bhashini Translation API (for regional Indian languages) & Gemini Translation API (for global languages)
+* **Database & ORM:** SQLite (Dev) / PostgreSQL (Prod) with SQLAlchemy & Alembic Migrations
 * **Knowledge Graph:** NetworkX (Relational Entity Mapping)
 
 ---

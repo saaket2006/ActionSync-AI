@@ -137,128 +137,237 @@ class DocumentGenerator(BaseActionSyncTool):
         return md
 
     def _build_pdf_report(self, pdf_path: str, title: str, data: Dict[str, Any]) -> None:
-        """Draws structured text into a PDF file using fitz (PyMuPDF)."""
+        """Draws structured text into a PDF file using fitz (PyMuPDF) with auto-wrap and pagination."""
+        import datetime
         doc = fitz.open()
         
-        # Let's create a beautiful document
-        # Page size: Letter (612 x 792 points)
-        page = doc.new_page(width=612, height=792)
+        # Helper to map standard names to fitz short names
+        def get_fitz_font(fontname: str) -> str:
+            font_key = fontname.lower()
+            if "bold" in font_key or font_key == "hebo":
+                return "hebo"
+            elif "oblique" in font_key or "italic" in font_key or font_key == "heit":
+                return "heit"
+            else:
+                return "helv"
         
-        # Margins
-        margin = 54
-        rect = fitz.Rect(margin, margin, 612 - margin, 792 - margin)
+        # Helper to wrap text based on font metrics
+        def wrap_text_to_width(text: str, fontname: str, fontsize: float, max_width: float) -> list:
+            words = str(text).split()
+            lines = []
+            current_line = []
+            fitz_font = get_fitz_font(fontname)
+                
+            for word in words:
+                test_line = " ".join(current_line + [word])
+                length = fitz.get_text_length(test_line, fontname=fitz_font, fontsize=fontsize)
+                if length <= max_width:
+                    current_line.append(word)
+                else:
+                    if current_line:
+                        lines.append(" ".join(current_line))
+                        current_line = [word]
+                    else:
+                        lines.append(word)
+                        current_line = []
+                        
+            if current_line:
+                lines.append(" ".join(current_line))
+            return lines
+
+        # Flowable class to manage pagination and coordinates
+        class PDFFlowable:
+            def __init__(self, doc, width=612, height=792, margin=54):
+                self.doc = doc
+                self.width = width
+                self.height = height
+                self.margin = margin
+                self.max_y = height - margin
+                self.max_width = width - (2 * margin)
+                
+                self.page = None
+                self.y = margin
+                self.page_count = 0
+                self._new_page()
+
+            def _new_page(self):
+                self.page = self.doc.new_page(width=self.width, height=self.height)
+                self.page_count += 1
+                self.y = self.margin
+                
+                if self.page_count > 1:
+                    self.page.insert_text(
+                        fitz.Point(self.margin, self.margin), 
+                        "ActionSync AI Meeting Report (Continued)", 
+                        fontsize=8, 
+                        fontname="heit", 
+                        color=(0.5, 0.5, 0.5)
+                    )
+                    shape = self.page.new_shape()
+                    shape.draw_line(fitz.Point(self.margin, self.margin + 8), fitz.Point(self.width - self.margin, self.margin + 8))
+                    shape.finish(color=(0.9, 0.9, 0.9), width=0.5)
+                    shape.commit()
+                    self.y = self.margin + 25
+
+            def add_space(self, amount):
+                self.y += amount
+                if self.y >= self.max_y:
+                    self._new_page()
+
+            def add_text_line(self, text, fontsize=10, fontname="helv", color=(0, 0, 0), leading=12):
+                if self.y + leading > self.max_y:
+                    self._new_page()
+                fitz_font = get_fitz_font(fontname)
+                self.page.insert_text(fitz.Point(self.margin, self.y), text, fontsize=fontsize, fontname=fitz_font, color=color)
+                self.y += leading
+
+            def add_paragraph(self, text, fontsize=9, fontname="helv", color=(0.1, 0.1, 0.1), leading=11, space_after=6):
+                if not text:
+                    return
+                paragraphs = str(text).split("\n")
+                for para in paragraphs:
+                    para = para.strip()
+                    if not para:
+                        self.add_space(space_after)
+                        continue
+                        
+                    lines = wrap_text_to_width(para, fontname, fontsize, self.max_width)
+                    for line in lines:
+                        if self.y + leading > self.max_y:
+                            self._new_page()
+                        fitz_font = get_fitz_font(fontname)
+                        self.page.insert_text(fitz.Point(self.margin, self.y), line, fontsize=fontsize, fontname=fitz_font, color=color)
+                        self.y += leading
+                    self.add_space(space_after)
+
+        flow = PDFFlowable(doc)
         
-        # Draw Title
-        y = margin
-        page.insert_text(fitz.Point(margin, y), "ActionSync AI Meeting Report", fontsize=20, fontname="Helvetica-Bold", color=(0.1, 0.3, 0.6))
-        y += 30
+        # Professional color palette
+        primary_color = (0.07, 0.29, 0.61)  # Deep corporate blue
+        secondary_color = (0.2, 0.2, 0.2)
+        meta_color = (0.5, 0.5, 0.5)
         
-        page.insert_text(fitz.Point(margin, y), f"Meeting: {title}", fontsize=14, fontname="Helvetica-Bold", color=(0.2, 0.2, 0.2))
-        y += 20
+        # 1. Header
+        flow.add_text_line("ActionSync AI Meeting Report", fontsize=18, fontname="hebo", color=primary_color, leading=22)
+        flow.add_text_line(f"Meeting: {title}", fontsize=12, fontname="hebo", color=secondary_color, leading=16)
         
-        page.insert_text(fitz.Point(margin, y), f"Generated: {datetime.date.today().strftime('%B %d, %Y')}", fontsize=10, fontname="Helvetica-Oblique", color=(0.5, 0.5, 0.5))
-        y += 30
+        meeting_date = datetime.date.today().strftime('%B %d, %Y')
+        flow.add_text_line(f"Generated: {meeting_date}", fontsize=9, fontname="heit", color=meta_color, leading=12)
+        flow.add_space(8)
         
-        # Draw Divider Line
-        shape = page.new_shape()
-        shape.draw_line(fitz.Point(margin, y), fitz.Point(612 - margin, y))
+        # Header separator
+        shape = flow.page.new_shape()
+        shape.draw_line(fitz.Point(flow.margin, flow.y), fitz.Point(flow.width - flow.margin, flow.y))
         shape.finish(color=(0.8, 0.8, 0.8), width=1)
         shape.commit()
-        y += 25
+        flow.add_space(15)
         
-        # Executive Summary Section
-        sum_text = data.get("summarizer", {}).get("executive_summary", "No summary.")
-        page.insert_text(fitz.Point(margin, y), "1. Executive Summary", fontsize=12, fontname="Helvetica-Bold", color=(0.1, 0.3, 0.6))
-        y += 15
+        # Load sections
+        sum_data = data.get("summarizer", {})
+        dec_data = data.get("decision", {})
+        task_data = data.get("action_item", {})
+        risk_data = data.get("risk", {})
+        timeline_data = data.get("timeline", {})
+        impact_data = data.get("community_impact", {})
+        acc_data = data.get("accountability", {})
+        clar_data = data.get("clarification", {})
         
-        # Simple text wrapping helper using fitz TextWriter or HTML-like textbox insertion
-        tb = fitz.TextWriter(page.rect)
-        # We can write text into a textbox which auto-wraps!
-        textbox = fitz.Rect(margin, y, 612 - margin, y + 80)
-        page.insert_textbox(textbox, sum_text, fontsize=10, fontname="Helvetica", align=fitz.TEXT_ALIGN_LEFT)
-        y += 90
+        # Section 1: Executive Summary
+        flow.add_text_line("1. Executive Summary", fontsize=12, fontname="hebo", color=primary_color, leading=16)
+        flow.add_space(4)
+        flow.add_paragraph(sum_data.get("executive_summary", "No summary available."), fontsize=9, leading=12)
         
-        # Key Decisions
-        page.insert_text(fitz.Point(margin, y), "2. Key Decisions", fontsize=12, fontname="Helvetica-Bold", color=(0.1, 0.3, 0.6))
-        y += 15
+        key_topics = sum_data.get("key_topics", [])
+        if key_topics:
+            flow.add_paragraph(f"Key Topics: {', '.join(key_topics)}", fontsize=9, fontname="hebo", leading=12)
+            
+        meeting_context = sum_data.get("meeting_context")
+        if meeting_context:
+            flow.add_paragraph(f"Context: {meeting_context}", fontsize=9, fontname="heit", leading=12)
+        flow.add_space(12)
         
-        decisions = data.get("decision", {}).get("decisions", [])
-        dec_texts = []
+        # Section 2: Key Decisions
+        flow.add_text_line("2. Key Decisions", fontsize=12, fontname="hebo", color=primary_color, leading=16)
+        flow.add_space(4)
+        decisions = dec_data.get("decisions", [])
         if decisions:
-            for d in decisions[:4]:  # Limit to first 4 for single page layout simplicity
-                dec_texts.append(f"- {d.get('title')} (Decided by: {d.get('decider_name')})")
+            for idx, d in enumerate(decisions, 1):
+                title_line = f"{idx}. {d.get('title')} (Status: {d.get('status', 'Approved')})"
+                flow.add_text_line(title_line, fontsize=9, fontname="hebo", color=secondary_color, leading=12)
+                flow.add_paragraph(f"   Description: {d.get('description')}", fontsize=9, leading=12, space_after=2)
+                flow.add_paragraph(f"   Decided by: {d.get('decider_name')}", fontsize=9, fontname="heit", leading=11, space_after=6)
         else:
-            dec_texts.append("No decisions extracted.")
-            
-        dec_textbox = fitz.Rect(margin, y, 612 - margin, y + 80)
-        page.insert_textbox(dec_textbox, "\n".join(dec_texts), fontsize=10, fontname="Helvetica", align=fitz.TEXT_ALIGN_LEFT)
-        y += 90
+            flow.add_paragraph("No formal decisions were extracted from this meeting.", fontsize=9, leading=12)
+        flow.add_space(12)
         
-        # Action Items
-        page.insert_text(fitz.Point(margin, y), "3. Action Items", fontsize=12, fontname="Helvetica-Bold", color=(0.1, 0.3, 0.6))
-        y += 15
-        
-        tasks = data.get("action_item", {}).get("tasks", [])
-        task_texts = []
+        # Section 3: Action Items & Assignments
+        flow.add_text_line("3. Action Items & Assignments", fontsize=12, fontname="hebo", color=primary_color, leading=16)
+        flow.add_space(4)
+        tasks = task_data.get("tasks", [])
         if tasks:
-            for t in tasks[:4]:
-                task_texts.append(f"- {t.get('title')} (Assignee: {t.get('assignee_name')}, Deadline: {t.get('deadline') or 'N/A'})")
+            for idx, t in enumerate(tasks, 1):
+                deadline_str = f", Deadline: {t.get('deadline')}" if t.get('deadline') else ""
+                title_line = f"{idx}. {t.get('title')} (Assignee: {t.get('assignee_name')}{deadline_str})"
+                flow.add_text_line(title_line, fontsize=9, fontname="hebo", color=secondary_color, leading=12)
+                flow.add_paragraph(f"   Description: {t.get('description')}", fontsize=9, leading=12, space_after=2)
+                flow.add_paragraph(f"   Status: {t.get('status', 'Pending')}", fontsize=9, fontname="heit", leading=11, space_after=6)
         else:
-            task_texts.append("No tasks assigned.")
-            
-        task_textbox = fitz.Rect(margin, y, 612 - margin, y + 80)
-        page.insert_textbox(task_textbox, "\n".join(task_texts), fontsize=10, fontname="Helvetica", align=fitz.TEXT_ALIGN_LEFT)
-        y += 90
-
-        # Timeline and Risks on a second page!
-        page2 = doc.new_page(width=612, height=792)
-        y = margin
+            flow.add_paragraph("No action items were assigned in this meeting.", fontsize=9, leading=12)
+        flow.add_space(12)
         
-        page2.insert_text(fitz.Point(margin, y), "4. Timeline & Project Milestones", fontsize=12, fontname="Helvetica-Bold", color=(0.1, 0.3, 0.6))
-        y += 15
-        
-        events = data.get("timeline", {}).get("events", [])
-        event_texts = []
+        # Section 4: Roadmap & Milestones
+        flow.add_text_line("4. Roadmap & Milestones", fontsize=12, fontname="hebo", color=primary_color, leading=16)
+        flow.add_space(4)
+        events = timeline_data.get("events", [])
         if events:
-            for e in events[:5]:
-                event_texts.append(f"- [{e.get('event_date')}] {e.get('description')} ({e.get('project_name')})")
+            for e in events:
+                event_line = f"- [{e.get('event_date')}] {e.get('description')} (Project: {e.get('project_name')})"
+                flow.add_paragraph(event_line, fontsize=9, leading=12, space_after=4)
         else:
-            event_texts.append("No timeline milestones.")
-            
-        evt_textbox = fitz.Rect(margin, y, 612 - margin, y + 100)
-        page2.insert_textbox(evt_textbox, "\n".join(event_texts), fontsize=10, fontname="Helvetica", align=fitz.TEXT_ALIGN_LEFT)
-        y += 110
+            flow.add_paragraph("No timeline events or project milestones were identified.", fontsize=9, leading=12)
+        flow.add_space(12)
         
-        # Risks
-        page2.insert_text(fitz.Point(margin, y), "5. Risks & Blockers", fontsize=12, fontname="Helvetica-Bold", color=(0.1, 0.3, 0.6))
-        y += 15
-        
-        risks = data.get("risk", {}).get("risks", [])
-        risk_texts = []
+        # Section 5: Risks & Blockers
+        flow.add_text_line("5. Risks & Blockers", fontsize=12, fontname="hebo", color=primary_color, leading=16)
+        flow.add_space(4)
+        risks = risk_data.get("risks", [])
         if risks:
-            for r in risks[:4]:
-                risk_texts.append(f"- {r.get('description')} (Severity: {r.get('impact_level')}, Mitigation: {r.get('mitigation_strategy')})")
+            for idx, r in enumerate(risks, 1):
+                title_line = f"{idx}. {r.get('description')} (Severity: {r.get('impact_level')})"
+                flow.add_text_line(title_line, fontsize=9, fontname="hebo", color=secondary_color, leading=12)
+                flow.add_paragraph(f"   Mitigation: {r.get('mitigation_strategy')}", fontsize=9, leading=12, space_after=6)
         else:
-            risk_texts.append("No risks identified.")
+            flow.add_paragraph("No critical risks or blockers were identified.", fontsize=9, leading=12)
+        flow.add_space(12)
+        
+        # Section 6: Ethical & Organizational Impact
+        flow.add_text_line("6. Team Impact & Accountability", fontsize=12, fontname="hebo", color=primary_color, leading=16)
+        flow.add_space(4)
+        
+        impact_summary = impact_data.get("impact_summary")
+        if impact_summary:
+            flow.add_text_line("Community Impact Summary:", fontsize=9, fontname="hebo", color=secondary_color, leading=12)
+            flow.add_paragraph(impact_summary, fontsize=9, leading=12)
             
-        rsk_textbox = fitz.Rect(margin, y, 612 - margin, y + 100)
-        page2.insert_textbox(rsk_textbox, "\n".join(risk_texts), fontsize=10, fontname="Helvetica", align=fitz.TEXT_ALIGN_LEFT)
-        y += 110
-
-        # Team Impact & Accountability
-        page2.insert_text(fitz.Point(margin, y), "6. Culture, Ethical & Organizational Impact", fontsize=12, fontname="Helvetica-Bold", color=(0.1, 0.3, 0.6))
-        y += 15
+        acc_summary = acc_data.get("accountability_summary")
+        if acc_summary:
+            flow.add_text_line("Accountability Overview:", fontsize=9, fontname="hebo", color=secondary_color, leading=12)
+            flow.add_paragraph(acc_summary, fontsize=9, leading=12)
+            
+        follow_up = acc_data.get("follow_up_schedule")
+        if follow_up:
+            flow.add_paragraph(f"Follow-Up Schedule: {follow_up}", fontsize=9, fontname="hebo", leading=12)
+        flow.add_space(12)
         
-        impact_summary = data.get("community_impact", {}).get("impact_summary", "N/A")
-        acc_summary = data.get("accountability", {}).get("accountability_summary", "N/A")
-        combined_impact = f"Community Impact:\n{impact_summary}\n\nAccountability Overview:\n{acc_summary}"
-        
-        impact_textbox = fitz.Rect(margin, y, 612 - margin, y + 150)
-        page2.insert_textbox(impact_textbox, combined_impact, fontsize=10, fontname="Helvetica", align=fitz.TEXT_ALIGN_LEFT)
-        
+        # Section 7: Open Questions / Ambiguities
+        if clar_data.get("is_clarification_needed") and clar_data.get("questions"):
+            flow.add_text_line("7. Open Questions / Ambiguities", fontsize=12, fontname="hebo", color=primary_color, leading=16)
+            flow.add_space(4)
+            for q in clar_data.get("questions", []):
+                flow.add_paragraph(f"- {q}", fontsize=9, leading=12, space_after=4)
+                
         doc.save(pdf_path)
         doc.close()
 
-import datetime
 # Register tool
 tool_registry.register(DocumentGenerator())

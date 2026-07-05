@@ -17,6 +17,7 @@ router = APIRouter(prefix="/meetings", tags=["Meetings"])
 def upload_meeting(
     title: str = Form(...),
     file: UploadFile = File(...),
+    target_language: str = Form("en"),
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_user)
 ):
@@ -48,7 +49,8 @@ def upload_meeting(
     meeting_in = MeetingCreate(
         title=title,
         date=datetime.datetime.utcnow(),
-        duration=0.0  # Computed later after transcription
+        duration=0.0,  # Computed later after transcription
+        target_language=target_language
     )
     
     meeting = MeetingRepository.create_meeting(db, meeting_in, audio_path=file_path)

@@ -13,7 +13,8 @@ class MeetingRepository:
             date=meeting_in.date,
             duration=meeting_in.duration,
             audio_path=audio_path,
-            status="Pending"
+            status="Pending",
+            target_language=meeting_in.target_language
         )
         db.add(db_meeting)
         db.commit()

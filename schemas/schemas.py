@@ -67,6 +67,7 @@ class MeetingBase(BaseModel):
     title: str
     date: datetime
     duration: float = 0.0
+    target_language: Optional[str] = "en"
 
 class MeetingCreate(MeetingBase):
     pass
@@ -79,22 +80,9 @@ class MeetingUpdate(BaseModel):
     community_impact: Optional[str] = None
     clarification_notes: Optional[str] = None
     error_message: Optional[str] = None
+    target_language: Optional[str] = None
 
-class MeetingResponse(MeetingBase):
-    id: str
-    status: str
-    transcript_raw: Optional[str] = None
-    transcript_clean: Optional[str] = None
-    audio_path: Optional[str] = None
-    executive_summary: Optional[str] = None
-    community_impact: Optional[str] = None
-    clarification_notes: Optional[str] = None
-    error_message: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
 
-    class Config:
-        from_attributes = True
 
 # ============================================================================
 # Entity Schemas (Person, Project)
@@ -211,6 +199,28 @@ class RelationshipCreate(RelationshipBase):
 
 class RelationshipResponse(RelationshipBase):
     id: str
+
+    class Config:
+        from_attributes = True
+
+class MeetingResponse(MeetingBase):
+    id: str
+    status: str
+    transcript_raw: Optional[str] = None
+    transcript_clean: Optional[str] = None
+    audio_path: Optional[str] = None
+    executive_summary: Optional[str] = None
+    community_impact: Optional[str] = None
+    clarification_notes: Optional[str] = None
+    error_message: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    
+    # Nested relations populated automatically by SQLAlchemy
+    tasks: List[TaskResponse] = []
+    decisions: List[DecisionResponse] = []
+    risks: List[RiskResponse] = []
+    timeline_events: List[TimelineEventResponse] = []
 
     class Config:
         from_attributes = True

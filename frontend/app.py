@@ -15,6 +15,8 @@ st.set_page_config(
 # Backend URL config
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
 
+import time
+
 # Initialize session state variables
 if "token" not in st.session_state:
     st.session_state.token = None
@@ -22,6 +24,25 @@ if "username" not in st.session_state:
     st.session_state.username = None
 if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
+
+# Session restoration from query parameters (for browser refreshes)
+if not st.session_state.token:
+    q_token = st.query_params.get("session_token")
+    q_username = st.query_params.get("session_username")
+    q_login_time = st.query_params.get("session_login_time")
+    
+    if q_token and q_username and q_login_time:
+        try:
+            login_time = float(q_login_time)
+            # Retain session for 5 minutes (300 seconds)
+            if time.time() - login_time < 300:
+                st.session_state.token = q_token
+                st.session_state.username = q_username
+            else:
+                # Expired, clean up
+                st.query_params.clear()
+        except ValueError:
+            pass
 
 # Custom CSS for Premium Design
 st.markdown("""
@@ -125,6 +146,10 @@ def show_login_page():
                     data = response.json()
                     st.session_state.token = data["access_token"]
                     st.session_state.username = login_username
+                    # Store session parameters to survive browser refresh
+                    st.query_params["session_token"] = data["access_token"]
+                    st.query_params["session_username"] = login_username
+                    st.query_params["session_login_time"] = str(time.time())
                     st.success("Successfully logged in!")
                     st.rerun()
                 else:
@@ -295,6 +320,41 @@ def show_upload():
     st.markdown("<p class='tagline'>Upload audio files (mp3, wav, m4a) to transcribe and execute the multi-agent intelligence pipeline.</p>", unsafe_allow_html=True)
     
     meeting_title = st.text_input("Meeting Title", placeholder="e.g. Q3 Roadmap Kick-off")
+    
+    output_lang = st.selectbox(
+        "Target Output Language",
+        options=[
+            "English",
+            "Hindi (हिन्दी)",
+            "Tamil (தமிழ்)",
+            "Telugu (తెలుగు)",
+            "Kannada (ಕನ್ನಡ)",
+            "Marathi (ಮರಾठी)",
+            "Bengali (বাংলা)",
+            "Malayalam (മലയാളം)",
+            "Spanish (Español)",
+            "French (Français)",
+            "German (Deutsch)"
+        ],
+        index=0,
+        help="The language in which summaries, decisions, tasks, timeline events, and risks will be generated."
+    )
+    
+    lang_map = {
+        "English": "en",
+        "Hindi (हिन्दी)": "hi",
+        "Tamil (தமிழ்)": "ta",
+        "Telugu (తెలుగు)": "te",
+        "Kannada (ಕನ್ನಡ)": "kn",
+        "Marathi (ಮರಾठी)": "mr",
+        "Bengali (বাংলা)": "bn",
+        "Malayalam (മലയാളം)": "ml",
+        "Spanish (Español)": "es",
+        "French (Français)": "fr",
+        "German (Deutsch)": "de"
+    }
+    target_lang_code = lang_map[output_lang]
+    
     uploaded_file = st.file_uploader("Select Meeting Audio File", type=["mp3", "wav", "m4a", "mp4", "ogg"])
     
     if st.button("Upload & Process"):
@@ -306,7 +366,10 @@ def show_upload():
             try:
                 # 1. Upload file
                 files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
-                data = {"title": meeting_title}
+                data = {
+                    "title": meeting_title,
+                    "target_language": target_lang_code
+                }
                 
                 upload_res = requests.post(
                     f"{BACKEND_URL}/api/meetings/upload",
@@ -467,80 +530,61 @@ def show_history():
             
         with tab_dec:
             st.subheader("Extracted Decisions")
-            # Fetch segments or entities
-            dec_res = requests.get(f"{BACKEND_URL}/api/meetings/{m_id}", headers=get_headers())  # Fetching links if any
-            # Query db details: for simplicity, we query backend router endpoints
-            # We can request details of decisions from backend `/api/meetings` links
-            # To fetch tasks, decisions, risks for a specific meeting, let's display them
-            # Wait, let's call semantic search or fetch entities related to this meeting!
-            # Since we have semantic search in backend `/api/memory/search` or `/api/meetings/{m_id}/segments`,
-            # we can show the details. Let's do a request to the backend database via a custom fetch or display summaries
-            # Wait, the summary and impact are already inside selected_meeting!
-            # What about decisions? We can display them if we query the SQL database.
-            # Let's see if we have an endpoint in `meetings.py` for segments, yes: `/meetings/{meeting_id}/segments`.
-            # Let's show the raw segments if needed.
-            # For decisions/tasks, we can search using Semantic Search or filter.
-            # Let's show search results or retrieve lists of tasks.
-            # Let's perform a query for decisions with meeting_id!
-            # We can use our `/api/memory/search?query=Decision&scope=session` or similar,
-            # but wait, let's search for decisions in this meeting!
-            # Let's call `/api/memory/search?query=Decision&scope=session`
-            dec_search = requests.get(f"{BACKEND_URL}/api/memory/search?query={m_id}&scope=session", headers=get_headers())
-            if dec_search.status_code == 200:
-                memories = dec_search.json()
-                # Render keys and values from session memory
-                decisions_found = False
-                for item in memories:
-                    if "decision" in item["key"].lower():
-                        decisions_found = True
-                        st.markdown(f"**{item['key'].replace(m_id + '_', '').capitalize()}**")
-                        st.write(item["value"])
-                if not decisions_found:
-                    st.info("No structured decisions persisted in memory for this session.")
+            decisions = selected_meeting.get("decisions", [])
+            if decisions:
+                for idx, dec in enumerate(decisions):
+                    st.markdown(f"**Decision #{idx+1}: {dec['title']}**")
+                    st.write(f"**Description:** {dec.get('description') or 'No description provided.'}")
+                    st.write(f"**Status:** {dec.get('status') or 'Approved'}")
+                    if dec.get("decider"):
+                        st.write(f"**Decided By:** {dec['decider']['name']} ({dec['decider'].get('role') or 'No role'})")
+                    st.markdown("---")
             else:
-                st.info("No decisions stored in memory.")
+                st.info("No decisions recorded for this meeting.")
 
         with tab_tsk:
             st.subheader("Action Items")
-            dec_search = requests.get(f"{BACKEND_URL}/api/memory/search?query={m_id}&scope=session", headers=get_headers())
-            if dec_search.status_code == 200:
-                memories = dec_search.json()
-                tasks_found = False
-                for item in memories:
-                    if "task" in item["key"].lower() or "action" in item["key"].lower():
-                        tasks_found = True
-                        st.markdown(f"**{item['key'].replace(m_id + '_', '').capitalize()}**")
-                        st.write(item["value"])
-                if not tasks_found:
-                    st.info("No action items persisted in memory for this session.")
+            tasks = selected_meeting.get("tasks", [])
+            if tasks:
+                for idx, task in enumerate(tasks):
+                    st.markdown(f"**Task #{idx+1}: {task['title']}**")
+                    st.write(f"**Description:** {task.get('description') or 'No description provided.'}")
+                    st.write(f"**Status:** {task.get('status') or 'Pending'}")
+                    if task.get("deadline"):
+                        d_str = task["deadline"][:10] if isinstance(task["deadline"], str) else str(task["deadline"])
+                        st.write(f"**Deadline:** {d_str}")
+                    if task.get("assignee"):
+                        st.write(f"**Assignee:** {task['assignee']['name']} ({task['assignee'].get('role') or 'No role'})")
+                    st.markdown("---")
+            else:
+                st.info("No action items recorded for this meeting.")
 
         with tab_rsk:
             st.subheader("Risks & Blockers")
-            dec_search = requests.get(f"{BACKEND_URL}/api/memory/search?query={m_id}&scope=session", headers=get_headers())
-            if dec_search.status_code == 200:
-                memories = dec_search.json()
-                risks_found = False
-                for item in memories:
-                    if "risk" in item["key"].lower():
-                        risks_found = True
-                        st.markdown(f"**{item['key'].replace(m_id + '_', '').capitalize()}**")
-                        st.write(item["value"])
-                if not risks_found:
-                    st.info("No risks persisted in memory for this session.")
+            risks = selected_meeting.get("risks", [])
+            if risks:
+                for idx, risk in enumerate(risks):
+                    st.markdown(f"**Risk #{idx+1}: {risk['description']}**")
+                    st.write(f"**Impact Level:** {risk.get('impact_level') or 'Medium'}")
+                    st.write(f"**Mitigation Strategy:** {risk.get('mitigation_strategy') or 'No mitigation defined.'}")
+                    st.write(f"**Status:** {risk.get('status') or 'Active'}")
+                    st.markdown("---")
+            else:
+                st.info("No risks or blockers recorded for this meeting.")
 
         with tab_timeline:
-            st.subheader("Project Timelines & Dates")
-            dec_search = requests.get(f"{BACKEND_URL}/api/memory/search?query={m_id}&scope=session", headers=get_headers())
-            if dec_search.status_code == 200:
-                memories = dec_search.json()
-                timeline_found = False
-                for item in memories:
-                    if "timeline" in item["key"].lower():
-                        timeline_found = True
-                        st.markdown(f"**{item['key'].replace(m_id + '_', '').capitalize()}**")
-                        st.write(item["value"])
-                if not timeline_found:
-                    st.info("No timeline milestones persisted in memory.")
+            st.subheader("Project Timelines & Milestones")
+            timeline = selected_meeting.get("timeline_events", [])
+            if timeline:
+                for idx, ev in enumerate(timeline):
+                    date_str = ev["event_date"][:10] if isinstance(ev["event_date"], str) else str(ev["event_date"])
+                    st.markdown(f"**Milestone #{idx+1}: {date_str}**")
+                    st.write(ev["description"])
+                    if ev.get("project"):
+                        st.write(f"**Project:** {ev['project']['name']}")
+                    st.markdown("---")
+            else:
+                st.info("No timeline milestones recorded for this meeting.")
 
         with tab_transcript:
             st.subheader("Transcribed Conversation")
@@ -657,6 +701,7 @@ def main():
                 st.session_state.token = None
                 st.session_state.username = None
                 st.session_state.page = "Dashboard"
+                st.query_params.clear()
                 st.rerun()
                 
         # Main page routing
