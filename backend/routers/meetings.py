@@ -122,6 +122,7 @@ async def wait_for_meeting(
     """Long-polling endpoint that blocks and waits until a meeting status is no longer 'Pending' or 'Processing'."""
     import asyncio
     for _ in range(300):  # Timeout after 10 minutes (300 * 2s)
+        db.expire_all()  # Clear identity map cache so we query fresh DB data on next call
         meeting = MeetingRepository.get_meeting(db, meeting_id)
         if not meeting:
             raise HTTPException(status_code=404, detail="Meeting not found")
@@ -130,6 +131,5 @@ async def wait_for_meeting(
             return meeting
             
         await asyncio.sleep(2)
-        db.refresh(meeting)
         
     return meeting
