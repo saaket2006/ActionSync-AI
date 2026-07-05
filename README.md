@@ -54,7 +54,7 @@ The diagram below illustrates the flow from raw meeting audio/video uploads to s
 
 ```mermaid
 graph TD
-    A[Meeting Audio/Video Upload] -->|Uvicorn Threadpool| B[OpenAI Whisper(faster-whisper)]
+    A[Meeting Audio/Video Upload] -->|Uvicorn Threadpool| B[OpenAI Whisper Tool]
     B -->|Fast Transcription on CUDA GPU| C[Raw & Clean Transcripts]
     C -->|Trigger ADK Session| D[Google ADK Orchestrator]
     
